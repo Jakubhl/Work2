@@ -21,13 +21,56 @@ function get_data_from_server() {
         }]
     }
 }
+get_data_from_server()
 
 function save_data_to_server(data) {
     
     console.log(data);
 }
 
+function add_control(){
+    var control_name = prompt("Zadejte nazev nove kontrolky")
+    if(control_name != null){
 
+        var control_label = prompt("Zadejte popis nove kontrolky")
+        if(control_label != null){
+            control_states = "";
+            var finished = false;
+            while (control_states != null && finished == false){
+                var control_states = prompt("Zadejte pocet stavu nove kontrolky (1-3), [sviti ,nesviti ,blika]")               
+                if(control_states != null && control_states < 4){//&& Number.isInteger(control_states) == true){
+                //posledni status stroje...
+                data.status[data.status.length] = {
+                "control": String(control_name),
+                "label": String(control_label),
+                "state": Math.floor(Math.random() * control_states)
+                }
+
+                console.log("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
+                //Refresh stranky:
+                //document.location.reload();
+                //document.location.reload(true);
+                //$("#body").html(htmlData);
+                //body.innerHTML = ''
+                main();
+                finished = true;
+                
+                }else if (control_states == null){
+                    console.log("Zadavani preruseno uzivatelem")
+                }
+                else {
+                    console.log("Zadane cislo je mimo rozsah: (1-3)")
+                }
+            }           
+        } else {
+            console.log("Zadavani preruseno uzivatelem")
+        }  
+    }
+}
+
+function add_logic(){
+
+}
 function current_state_by_words(input){
 
     var combination_by_words = [];
@@ -145,8 +188,7 @@ function customise_logic(){
             " pro stav s nazvem: " +  state_data.logic[selected_state].state_label + " (č.:" + selected_state + ")" + " ,byla zmenena na: " + combination_change + " (" + current_state_by_words(combination_change) + ") ")
                 
             state_data.logic[selected_state].combination = combination_change;
-        }
-        
+        }        
     } 
 }
 
@@ -191,47 +233,54 @@ state_data = {
 }
 
 //MAIN---------------------------------------------------------------------------------------------------------------------
-get_data_from_server()
 
-document.write("Nazev stroje: " + data.machine);
-document.write("<br>");
-document.write("<h3>Stav stroje: </h3>");
-document.write("Kontrolka: ");
-document.write("<br>");
+function main(){
+    
 
-//Vypis aktualnich nahodnych stavu kontrolek:
-
-var current_combination = [0,0,0,0]
-for (let i = 0; i < data.status.length; i++) {
-    current_combination[i] = data.status[i].state
-    document.write(data.status[i].label + ":" + " " + state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")")
+    document.write("Nazev stroje: " + data.machine);
     document.write("<br>");
-}
-
-// Hledani shody nahodnych stavu s nastavenou logikou a prirazeni stavu stroje:
-var sum_of_bad_combinations = 0;
-for (let i = 0; i < state_data.logic.length; i++) {
-    if (current_combination.toString() == state_data.logic[i].combination.toString()){
-        //console.log(state_data.logic[i].state_label)
+    document.write("<h3>Stav stroje: </h3>");
+    document.write("Kontrolka: ");
+    document.write("<br>");
+    //Vypis aktualnich nahodnych stavu kontrolek:
+    var current_combination = [0,0,0,0]
+    for (let i = 0; i < data.status.length; i++) {
+        current_combination[i] = data.status[i].state
+        document.write(data.status[i].control + ": " + data.status[i].label + ":" + " " + state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")")
         document.write("<br>");
-        document.write(state_data.logic[i].state_label)
-        document.write("<br>");
+    }
 
-        if (state_data.logic[i].state_label == "chyba stroje"){
-            var error_message = prompt("Vepiste poznamku/duvod chyby: ");
-            save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
-            ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ error_message);
+    // Hledani shody nahodnych stavu s nastavenou logikou a prirazeni stavu stroje:
+    var sum_of_bad_combinations = 0;
+    var result = "";
+   
+    for (let i = 0; i < state_data.logic.length; i++) {
+        if (current_combination.toString() == state_data.logic[i].combination.toString()){
+            //console.log(state_data.logic[i].state_label)
+            result = state_data.logic[i].state_label;
+            document.write("<br>");
+            document.write("Vysledek: " + state_data.logic[i].state_label)
+            document.write("<br>");
+     
+        } else {
+            sum_of_bad_combinations += 1;
         }
-    } else {
-        sum_of_bad_combinations += 1;
+    }
+    if (result == "chyba stroje"){
+        var error_message = prompt("Chyba stroje\nVepiste poznamku/duvod chyby: ");
+        save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
+        ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ error_message);
+    }
+    //Pokud nebyla nalezena jedina shoda:
+    if (sum_of_bad_combinations == state_data.logic.length){
+        document.write("<br>");  
+        document.write("Vysledek: neplatny stav")
+        document.write("<br>");  
     }
 }
-//Pokud nebyla nalezena jedina shoda:
-if (sum_of_bad_combinations == state_data.logic.length){
-    document.write("<br>");  
-    document.write("neplatny stav")
-    document.write("<br>");  
-}
+
+main();
+
 
 
 
