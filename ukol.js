@@ -27,50 +27,332 @@ function save_data_to_server(data) {
     
     console.log(data);
 }
+function current_controls(){
+    var list = "";
+    for (let i = 0; i < data.status.length; i++) {
+        list += (data.status[i].control + ": " + data.status[i].label + ": " + data.status[i].state + " " + state_behaviour.label[data.status[i].state].Task + "\n")
+    }
+    alert(list)
+}
+function current_logic(){
+    var list = "";
+    for (let i = 0; i < state_data.logic.length; i++) {
+        list += (state_data.logic[i].state_label + ", " + state_data.logic[i].combination + " (" + current_state_by_words(state_data.logic[i].combination) + ")" + "\n")
+    }
+    alert(list)
+}
 
 function add_control(){
     var control_name = prompt("Zadejte nazev nove kontrolky")
-    if(control_name != null){
+    if(chosen_ok_input(control_name)==true){
 
         var control_label = prompt("Zadejte popis nove kontrolky")
-        if(control_label != null){
+        if(chosen_ok_input(control_label)==true){
             control_states = "";
             var finished = false;
-            while (control_states != null && finished == false){
-                var control_states = prompt("Zadejte pocet stavu nove kontrolky (1-3), [sviti ,nesviti ,blika]")               
-                if(control_states != null && control_states < 4){//&& Number.isInteger(control_states) == true){
-                //posledni status stroje...
-                data.status[data.status.length] = {
-                "control": String(control_name),
-                "label": String(control_label),
-                "state": Math.floor(Math.random() * control_states)
-                }
+            var end_add_control = false;
+            var right_input = false;
+            while (control_states != null && finished == false  && end_add_control == false){
+                var control_states = prompt("Zadejte pocet stavu nove kontrolky (1-3), [nesviti,sviti,blika]")
+                if(chosen_ok_input(control_states) == true){
+                    if(range_input_right(control_states,1,3) == true){
+                        //nastaveni logiky s novou kontrolkou u vsech kombinaci
+                        for (let i = 0; i < state_data.logic.length; i++) {
+                            //pro pripadne preruseni for cylku:
+                            if(end_add_control == false){
+                                var new_logic_set = prompt("Nastavte logiku s novou kontrolkou pro: " + state_data.logic[i].combination + " tedy, " + state_data.logic[i].state_label);
+                                if(chosen_ok_input(new_logic_set) == true){
+                                    right_input = logic_verification(new_logic_set,false,true,i,0,1);
+                                    if(right_input == false){
+                                        //vratime se o krok zpet...
+                                        i -=1;
+                                    }
+                                } else {
+                                    end_add_control = confirm("Veskere nastaveni, co jste doted provedli bude zruseno, opravdu si prejete prerusit zadavani?");
+                                    if(end_add_control == false){
+                                        //vratime se o krok zpet... jinak operace prerusena...
+                                        i -=1;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if(end_add_control == false && right_input == true){
+                            //prenastaveni logiky:
+                            alert("Logika " + state_data.logic[i].combination + "byla prenastavena s novou kontrolkou na:" + new_logic_set)
+                            state_data.logic[i].combination = new_logic_set;
+                            //logika prenastavena, muzeme pridat novou kontrolku...
+                            //posledni status stroje...
+                            data.status[data.status.length] = {
+                            "control": String(control_name),
+                            "label": String(control_label),
+                            "state": Math.floor(Math.random() * control_states)
+                            }
 
-                console.log("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
-                //Refresh stranky:
-                //document.location.reload();
-                //document.location.reload(true);
-                //$("#body").html(htmlData);
-                //body.innerHTML = ''
-                main();
-                finished = true;
-                
-                }else if (control_states == null){
-                    console.log("Zadavani preruseno uzivatelem")
-                }
-                else {
-                    console.log("Zadane cislo je mimo rozsah: (1-3)")
-                }
+                            console.log("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
+                            alert("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
+                            //Refresh stranky:
+                            //main();
+                            finished = true; 
+                        }  
+                    }
+                }                              
             }           
-        } else {
-            console.log("Zadavani preruseno uzivatelem")
-        }  
+        }
+    }  
+}
+
+function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_control){
+    var correct_numbers = 0;
+    var right_input = false;
+    var change_successful = false;
+    var cancel_cycle = false;
+    
+    for (let i = 0; i < String(state_data.logic[chosen_logic].combination).length; i++) {
+        if(cancel_cycle == false){
+            if (input[i] > 2){
+                console.log(input[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)");
+                alert(input[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)");
+                cancel_cycle = true;
+            } else {
+                correct_numbers +=1;
+            }
+        }
     }
+    
+    input = input.replace(/\ /g, ',');
+    input = input.replace(/\./g, ',');
+
+    //adding new control uz vyzaduje logiku o 1 delsi...
+    if ((input.length == String(state_data.logic[chosen_logic].combination).length + adding_new_control) && (correct_numbers == String(state_data.logic[chosen_logic].combination).length + adding_new_control)){
+        right_input = true;
+    } else {
+        console.log("spatne zadano, zkuste to prosim znovu");
+        alert("spatne zadano, zkuste to prosim znovu");
+    }
+    change_successful = false;
+    if(right_input == true) {
+        //Probiha overovani...
+        //Pokud je rovno, netreba prepisovat + nesmi byt kombinace jiz obsazena (for cyklus)
+        if (state_data.logic[chosen_logic].combination != input){
+            var match = false;
+            for (let i = 0; i < state_data.logic.length; i++) {
+                if (input == state_data.logic[i].combination){
+                    match = true;
+                }
+            }
+            if (match == false){
+                change_successful = true;
+                
+            } else {
+                console.log("Kombinace: " + input + " je jiz zabrana")
+                var repeat = confirm("Kombinace: " + input + " je jiz zabrana." + "\nPrejete si zkusit znovu? ")
+                if(chosen_ok_input(repeat) == true){
+                    right_input = false;
+                }
+            }
+            
+        } else if(change == true) {
+            console.log("Kombinace je stejna, netreba menit");
+            var repeat = confirm("Kombinace je stejna, netreba menit.\nPrejete si zkusit znovu? ")
+            if(chosen_ok_input(repeat) == true){
+                right_input = false;
+            }
+        }       
+    }
+
+
+    if(change_successful == true){
+        if(add == true){
+            console.log("Byla pridana nova logika: " + logic_name + " s kombinaci: " + input + " (" + current_state_by_words(input) + ")");
+            alert("Byla pridana nova logika: " + logic_name + " s kombinaci: " + input + " (" + current_state_by_words(input) + ")");
+        }
+        if(change == true){
+            console.log("Kombinace " + state_data.logic[chosen_logic].combination + " (" + current_state_by_words(state_data.logic[chosen_logic].combination) + ") " +
+            " pro stav s nazvem: " +  state_data.logic[chosen_logic].state_label + " (č.:" + chosen_logic + ")" + " ,byla zmenena na: " + input + " (" + current_state_by_words(input) + ") ");
+            alert("Kombinace " + state_data.logic[chosen_logic].combination + " (" + current_state_by_words(state_data.logic[chosen_logic].combination) + ") " +
+            " pro stav s nazvem: " +  state_data.logic[chosen_logic].state_label + " (č.:" + chosen_logic + ")" + " ,byla zmenena na: " + input + " (" + current_state_by_words(input) + ") ");
+        }
+    }
+    
+    
+    return change_successful;
 }
 
 function add_logic(){
 
+    var logic_name = prompt("Zadejte popis funkce nove logiky")
+    if(chosen_ok_input(logic_name) == true){
+        var right_input = false;
+        var logic_combination = "";
+        while(right_input == false && logic_combination != null){
+            
+            logic_combination = prompt("Zadejte funkce kontrolek ve formatu: \"0,0,0\"..." + " aktualne pro: " + data.status.length + " kontrolek");
+            if(chosen_ok_input(logic_combination) == true){
+                //kdyz pridavame novou, tak pro provnani zvolena prvni, jiz ulozena kombinace (chosen_logic = 0)... irelevantni
+                right_input = logic_verification(logic_combination,true,false,0,logic_name,0);
+            } 
+        }
+    }
+    //Kdyz je uspesne vlozen input, je vlozena nova logika...
+    if (right_input == true){
+        state_data.logic[state_data.logic.length] = {
+        "state_label": String(logic_name),
+        "combination": logic_combination
+        }
+         
+    }        
 }
+
+//Funkce pro upravu uzivatelem bez znalosti programovani:
+//Prvne vyber logiky pro nastaveni zmeny:
+function customise_logic(){
+
+    var pick_successful = false;
+    var state_pick = "";
+    while(pick_successful == false && state_pick != null){
+        var state_pick = prompt("U jakeho stavu chcete zmenit logiku kontrolek? \n(Vepiste cislo od 0 nebo cely nazev bez diakritiky)");
+        //pokud nebylo zruseno...
+        if (chosen_ok_input(state_pick) == true) {
+            for (let i = 0; i < state_data.logic.length; i++) {
+                if (state_pick.toString() == state_data.logic[i].state_label.toString() || state_pick == i){
+
+                    console.log("Pro upravu byl zvolen stav s nazvem: " + state_data.logic[i].state_label + " a logikou stavu: " + state_data.logic[i].combination + 
+                    " (" + current_state_by_words(state_data.logic[i].combination) + ") ");
+                    alert("Pro upravu byl zvolen stav s nazvem: " + state_data.logic[i].state_label + " a logikou stavu: " + state_data.logic[i].combination + 
+                    " (" + current_state_by_words(state_data.logic[i].combination) + ") ");
+
+                    selected_state = i;
+                    pick_successful = true
+                }
+            }
+            if (pick_successful == false){
+                console.log("mimo rozsah...")
+                alert("mimo rozsah...")
+            }
+        }
+    }
+    
+    // Pokud bylo zvoleni uspesne, tak se definuji zmeny:
+    if (pick_successful == true){
+        //Osetreni pro spravny input ze strany uzivatele:
+        var right_input = false;
+        var combination_change = "";
+
+        while (right_input == false && combination_change != null){
+            combination_change = prompt("Jak si prejete zmenit zvolenou kombinaci? " + state_data.logic[selected_state].combination + 
+            " ,tedy:\n "+ current_state_by_words(state_data.logic[selected_state].combination) + " ,vyuzijte stejneho ciselneho formatu")
+            if (chosen_ok_input(combination_change) == true){
+                right_input = logic_verification(combination_change,false,true,selected_state,0,0);        
+            }  
+        }
+        //Kdyz je uspesne vlozen input je prepsana logika kontrolek...
+        if (right_input == true) {
+            state_data.logic[selected_state].combination = combination_change;
+        }        
+    } 
+}
+
+/*function customise_logic(){
+
+    var pick_successful = false;
+    var state_pick = "";
+    while(pick_successful == false && state_pick != null){
+        var state_pick = prompt("U jakeho stavu chcete zmenit logiku kontrolek? \n(Vepiste cislo od 0 nebo cely nazev bez diakritiky)");
+        //pokud nebylo zruseno...
+        if (chosen_ok_input(state_pick) == true) {
+            for (let i = 0; i < state_data.logic.length; i++) {
+                if (state_pick.toString() == state_data.logic[i].state_label.toString() || state_pick == i){
+                    console.log("Pro upravu byl zvolen stav s nazvem: " + state_data.logic[i].state_label + " a logikou stavu: " + state_data.logic[i].combination + 
+                    " (" + current_state_by_words(state_data.logic[i].combination) + ") ");
+                    alert("Pro upravu byl zvolen stav s nazvem: " + state_data.logic[i].state_label + " a logikou stavu: " + state_data.logic[i].combination + 
+                    " (" + current_state_by_words(state_data.logic[i].combination) + ") ");
+                    selected_state = i;
+                    pick_successful = true
+                }
+            }    
+            if (pick_successful == false){
+                console.log("mimo rozsah...")
+                alert("mimo rozsah...")
+            }
+        }
+    }
+    
+    // Pokud bylo zvoleni uspesne, tak se definuji zmeny:
+    if (pick_successful == true){
+        //Osetreni pro spravny input ze strany uzivatele:
+        var right_input = false;
+        var change_successful = false;
+        var repeat = true;
+        var combination_change = "";
+
+        while (right_input == false && repeat == true && combination_change != null){
+            var combination_change = prompt("Jak si prejete zmenit zvolenou kombinaci? " + state_data.logic[selected_state].combination + 
+            " ,tedy:\n "+ current_state_by_words(state_data.logic[selected_state].combination) + " ,vyuzijte stejneho ciselneho formatu")
+            if (chosen_ok_input(combination_change) == true){
+                var correct_numbers = 0;
+                // Na (2*(state_data.logic[selected_state].combination.length)-1) se odkazuji vzhledem ke spravne delce, nize porovnavam se vstupem
+                for (let i = 0; i < String(state_data.logic[selected_state].combination).length; i++) {
+                    if (combination_change[i] > 2){
+                        console.log(combination_change[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)");
+                        alert(combination_change[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)");
+                    } else {
+                        correct_numbers +=1;
+                    }
+                }
+                combination_change = combination_change.replace(/\ /g, ',');
+                combination_change = combination_change.replace(/\./g, ',');
+                
+            
+                if ((combination_change.length == String(state_data.logic[selected_state].combination).length) && (correct_numbers == String(state_data.logic[selected_state].combination).length)){
+                    right_input = true;
+                } else {
+                    console.log("spatne zadano, zkuste to prosim znovu");
+                    alert("spatne zadano, zkuste to prosim znovu");
+                }
+                if(right_input == true) {
+                    //Probiha overovani...
+                    //Pokud je rovno, netreba prepisovat + nesmi byt kombinace jiz obsazena (for cyklus)
+                    if (state_data.logic[selected_state].combination != combination_change){
+                        var match = false;
+                        for (let i = 0; i < state_data.logic.length; i++) {
+                            if (combination_change == state_data.logic[i].combination){
+                                match = true;
+                            }
+                        }
+                        if (match == false){
+                            change_successful = true;
+                            
+                        } else {
+                            console.log("Kombinace: " + combination_change + " je jiz zabrana")
+                            var repeat = confirm("Kombinace: " + combination_change + " je jiz zabrana." + "\nPrejete si zkusit znovu? ")
+                            if(chosen_ok_input(repeat) == true){
+                                right_input = false;
+                            }
+                        }
+                        
+                    } else {
+                        console.log("Kombinace je stejna, netreba menit");
+                        var repeat = confirm("Kombinace je stejna, netreba menit.\nPrejete si zkusit znovu? ")
+                        if(chosen_ok_input(repeat) == true){
+                            right_input = false;
+                        }
+                    }       
+                }
+            }  
+        }
+        //Kdyz je uspesne vlozen input je prepsana logika kontrolek...
+        if (change_successful == true) {
+            console.log("Kombinace " + state_data.logic[selected_state].combination + " (" + current_state_by_words(state_data.logic[selected_state].combination) + ") " +
+            " pro stav s nazvem: " +  state_data.logic[selected_state].state_label + " (č.:" + selected_state + ")" + " ,byla zmenena na: " + combination_change + " (" + current_state_by_words(combination_change) + ") ");
+            alert("Kombinace " + state_data.logic[selected_state].combination + " (" + current_state_by_words(state_data.logic[selected_state].combination) + ") " +
+            " pro stav s nazvem: " +  state_data.logic[selected_state].state_label + " (č.:" + selected_state + ")" + " ,byla zmenena na: " + combination_change + " (" + current_state_by_words(combination_change) + ") ");
+                
+            state_data.logic[selected_state].combination = combination_change;
+        }        
+    } 
+}*/
+
 function current_state_by_words(input){
 
     var combination_by_words = [];
@@ -89,108 +371,27 @@ function current_state_by_words(input){
     return combination_by_words;
 }
 
-//Funkce pro upravu uzivatelem bez znalosti programovani:
-//Prvne vyber logiky pro nastaveni zmeny:
-function customise_logic(){
-
-    var pick_successful = false;
-    var state_pick = "";
-    while(pick_successful == false && state_pick != null){
-        var state_pick = prompt("U jakeho stavu chcete zmenit logiku kontrolek? \n(Vepiste cislo od 0 nebo cely nazev)");
-        //pokud nebylo zruseno...
-        if (state_pick != null) {
-            if (state_pick != ""){
-                for (let i = 0; i < state_data.logic.length; i++) {
-                    if (state_pick.toString() == state_data.logic[i].state_label.toString() || state_pick == i){
-                        console.log("Pro upravu byl zvolen stav s nazvem: " + state_data.logic[i].state_label + " a logikou stavu: " + state_data.logic[i].combination + 
-                        " (" + current_state_by_words(state_data.logic[i].combination) + ") ")
-                        selected_state = i;
-                        pick_successful = true
-                    }
-                }    
-                if (pick_successful == false){
-                    console.log("mimo rozsah...")
-                }
-            } else {
-                console.log("Nebylo nic zapsano")
-            }  
-        }
+function chosen_ok_input(input){
+    if(input == null || input == ""){
+        console.log("Zadavani zruseno uzivatelem");
+        alert("Zadavani zruseno uzivatelem");
+    } else {
+        return true;
     }
-    
-    // Pokud bylo zvoleni uspesne, tak se definuji zmeny:
-    if (pick_successful == true){
-        //Osetreni pro spravny input ze strany uzivatele:
-        var right_input = false;
-        var change_successful = false;
-        var repeat = true;
-        var combination_change = "";
-
-        while (right_input == false && repeat == true && combination_change != null){
-            var combination_change = prompt("Jak si prejete zmenit zvolenou kombinaci? " + state_data.logic[selected_state].combination + 
-            " ,tedy:\n "+ current_state_by_words(state_data.logic[selected_state].combination) + " ,vyuzijte stejneho ciselneho formatu")
-            if (combination_change != null){
-                var correct_numbers = 0;
-                // Na (2*(state_data.logic[selected_state].combination.length)-1) se odkazuji vzhledem ke spravne delce, nize porovnavam se vstupem
-                for (let i = 0; i < String(state_data.logic[selected_state].combination).length; i++) {
-                    if (combination_change[i] > 2){
-                        console.log(combination_change[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)")
-                    } else {
-                        correct_numbers +=1;
-                    }
-                }
-                combination_change = combination_change.replace(/\ /g, ',');
-                combination_change = combination_change.replace(/\./g, ',');
-                
-            
-                if ((combination_change.length == String(state_data.logic[selected_state].combination).length) && (correct_numbers == String(state_data.logic[selected_state].combination).length)){
-                    right_input = true;
-                } else {
-                    console.log("spatne zadano, zkuste to prosim znovu")
-                }
-                if(right_input == true) {
-                    //Probiha overovani...
-                    //Pokud je rovno, netreba prepisovat + nesmi byt kombinace jiz obsazena (for cyklus)
-                    if (state_data.logic[selected_state].combination != combination_change){
-                        var match = false;
-                        for (let i = 0; i < state_data.logic.length; i++) {
-                            if (combination_change == state_data.logic[i].combination){
-                                match = true;
-                            }
-                        }
-                        if (match == false){
-                            change_successful = true;
-                            
-                        } else {
-                            console.log("Kombinace: " + combination_change + " je jiz zabrana")
-                            var repeat = confirm("Kombinace: " + combination_change + " je jiz zabrana." + "\nPrejete si zkusit znovu? ")
-                            if(repeat == true){
-                                right_input = false;
-                            } else {
-                                console.log("prepis logiky prerusen uzivatelem")
-                            }
-                        }
-                        
-                    } else {
-                        console.log("Kombinace je stejna, netreba menit");
-                        var repeat = confirm("Kombinace je stejna, netreba menit.\nPrejete si zkusit znovu? ")
-                        if(repeat == true){
-                            right_input = false;
-                        }else {
-                            console.log("prepis logiky prerusen uzivatelem")
-                        }   
-                    }       
-                }
-            }  
-        }
-        //Kdyz je uspesne vlozen input je prepsana logika kontrolek...
-        if (change_successful == true) {
-            console.log("Kombinace " + state_data.logic[selected_state].combination + " (" + current_state_by_words(state_data.logic[selected_state].combination) + ") " +
-            " pro stav s nazvem: " +  state_data.logic[selected_state].state_label + " (č.:" + selected_state + ")" + " ,byla zmenena na: " + combination_change + " (" + current_state_by_words(combination_change) + ") ")
-                
-            state_data.logic[selected_state].combination = combination_change;
-        }        
-    } 
 }
+
+function range_input_right(input,range_from,range_to){
+    if(input <= range_to && input >= range_from){
+        return true;
+
+    } else {
+        console.log("Zadane cislo neni v danem rozsahu: " + range_from + " - " + range_to);
+        alert("Zadane cislo neni v danem rozsahu: " + range_from + " - " + range_to);
+        return false;
+    }
+}
+
+
 
 //Vyjadreni chovani kontrolek slovy:
 state_behaviour = {
@@ -268,8 +469,11 @@ function main(){
     }
     if (result == "chyba stroje"){
         var error_message = prompt("Chyba stroje\nVepiste poznamku/duvod chyby: ");
-        save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
-        ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ error_message);
+        if (chosen_ok_input(error_message) == true){
+            save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
+            ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ error_message);
+        }
+        
     }
     //Pokud nebyla nalezena jedina shoda:
     if (sum_of_bad_combinations == state_data.logic.length){
