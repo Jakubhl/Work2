@@ -378,23 +378,28 @@ function main(){
             sum_of_bad_combinations += 1;
         }
     }
-    if (result == "chyba stroje"){
-        var error_message = prompt("Chyba stroje\nVepiste poznamku/duvod chyby: ");
-        if (chosen_ok_input(error_message) == true){
-            save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
-            ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ error_message);
-        }
-        
-    }
+    
     //Pokud nebyla nalezena jedina shoda:
     if (sum_of_bad_combinations == state_data.logic.length){
         document.write("<br>");  
         document.write("Vysledek: neplatny stav")
         document.write("<br>");  
     }
+    return result;
 }
 
-main();
+result = main();
+//setTimeout(() => { console.log("World!"); }, 5000);
+if (result == "chyba stroje"){
+    //Nastavit timeout aby se nacetla stranka
+    setTimeout(() => {
+        var error_message =  prompt("Chyba stroje\nVepiste poznamku/duvod chyby: "); 
+        if (chosen_ok_input(error_message) == true){
+            save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
+            ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ error_message);
+        }  
+    }, 500);
+}
 
 
 
