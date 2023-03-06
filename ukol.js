@@ -60,7 +60,8 @@ function add_control(){
                         for (let i = 0; i < state_data.logic.length; i++) {
                             //pro pripadne preruseni for cylku:
                             if(end_add_control == false){
-                                var new_logic_set = prompt("Nastavte logiku s novou kontrolkou pro: " + state_data.logic[i].combination + " tedy, " + state_data.logic[i].state_label);
+                                var new_logic_set = prompt("Nastavte logiku s novou kontrolkou pro: " + state_data.logic[i].combination + " \ntedy, " + state_data.logic[i].state_label + " (č.: " + i + ")"
+                                + "\n(s novou kontrolkou jiz: " + (data.status.length+1) +" stavu)");
                                 if(chosen_ok_input(new_logic_set) == true){
                                     right_input = logic_verification(new_logic_set,false,true,i,0,2);
                                     if(right_input == false){
@@ -68,6 +69,8 @@ function add_control(){
                                         i -=1;
                                     } else{
                                         //prenastaveni logiky v pripade spravneho inputu:
+                                        new_logic_set = new_logic_set.replace(/\ /g, ',');
+                                        new_logic_set = new_logic_set.replace(/\./g, ',');
                                         state_data.logic[i].combination = new_logic_set;
                                     }
                                 } else {
@@ -93,6 +96,7 @@ function add_control(){
                             console.log("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
                             alert("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
                             //Refresh stranky:
+                            //document.write("<controls>" + control_name + ": " + control_label + ":" + " " + state_behaviour.label[control_states].Task + " (" + control_states + ")</controls>")
                             //main();
                             finished = true; 
                         }  
@@ -150,7 +154,7 @@ function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_
                 
             } else {
                 console.log("Kombinace: " + input + " je jiz zabrana")
-                var repeat = confirm("Kombinace: " + input + " je jiz zabrana." + "\nPrejete si zmenit zadanou odpoved? ")
+                var repeat = confirm("Kombinace: " + input + " je jiz zabrana." + "\nPrejete si zmenit zadanou odpoved? Nebo ponechat stejnou? ")
                 if(repeat == true){
                     right_input = false;
                 } else {
@@ -163,6 +167,8 @@ function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_
             var repeat = confirm("Kombinace je stejna, netreba menit.\nPrejete si zkusit znovu? ")
             if(chosen_ok_input(repeat) == true){
                 right_input = false;
+            } else{
+                change_successful = "cancelled";
             }
         } else if(add == true) {
             //nezalezi, ze je stejna, jako porovnavaci
@@ -248,7 +254,7 @@ function customise_logic(){
         var right_input = false;
         var combination_change = "";
 
-        while (right_input == false && combination_change != null){
+        while (right_input == false && right_input != "cancelled" && combination_change != null){
             combination_change = prompt("Jak si prejete zmenit zvolenou kombinaci? " + state_data.logic[selected_state].combination + 
             " ,tedy:\n "+ current_state_by_words(state_data.logic[selected_state].combination) + " ,vyuzijte stejneho ciselneho formatu")
             if (chosen_ok_input(combination_change) == true){
@@ -257,6 +263,8 @@ function customise_logic(){
         }
         //Kdyz je uspesne vlozen input je prepsana logika kontrolek...
         if (right_input == true) {
+            combination_change = combination_change.replace(/\ /g, ',');
+            combination_change = combination_change.replace(/\./g, ',');
             state_data.logic[selected_state].combination = combination_change;
         }        
     } 
@@ -347,19 +355,23 @@ state_data = {
 //MAIN---------------------------------------------------------------------------------------------------------------------
 
 function main(){
+    //document.getElementById("div1g").innerHTML+="WHATEVER YOU WANT...";
+    //document.getElementById("div1g").innerHTML += 'hi';
+    document.write("<div1>Stroj: " + data.machine +
+    "\n<h3>Stav stroje: </h3>" +
+    "\nKontrolka: </div1>");
+    document.write("<div1><br></div1>");
     
-
-    document.write("Nazev stroje: " + data.machine);
-    document.write("<br>");
+    /*document.write("<br>");
     document.write("<h3>Stav stroje: </h3>");
     document.write("Kontrolka: ");
-    document.write("<br>");
+    document.write("<br>");*/
     //Vypis aktualnich nahodnych stavu kontrolek:
     var current_combination = [0,0,0,0]
     for (let i = 0; i < data.status.length; i++) {
         current_combination[i] = data.status[i].state
-        document.write(data.status[i].control + ": " + data.status[i].label + ":" + " " + state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")")
-        document.write("<br>");
+        document.write("<controls>" + data.status[i].control + ": " + data.status[i].label + ":" + " " + state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")</controls>")
+        document.write("<controls><br></controls>");
     }
 
     // Hledani shody nahodnych stavu s nastavenou logikou a prirazeni stavu stroje:
@@ -370,9 +382,9 @@ function main(){
         if (current_combination.toString() == state_data.logic[i].combination.toString()){
             //console.log(state_data.logic[i].state_label)
             result = state_data.logic[i].state_label;
-            document.write("<br>");
-            document.write("Vysledek: " + state_data.logic[i].state_label)
-            document.write("<br>");
+            document.write("<result><br></result>");
+            document.write("<result>Vysledek: " + state_data.logic[i].state_label + "</result>")
+            document.write("<result><br></result>");
      
         } else {
             sum_of_bad_combinations += 1;
@@ -381,27 +393,36 @@ function main(){
     
     //Pokud nebyla nalezena jedina shoda:
     if (sum_of_bad_combinations == state_data.logic.length){
-        document.write("<br>");  
-        document.write("Vysledek: neplatny stav")
-        document.write("<br>");  
+        document.write("<result><br></result>");  
+        document.write("<result>Vysledek: neplatny stav</result>")
+        document.write("<result><br></result>");  
     }
     return result;
 }
 
 result = main();
-//setTimeout(() => { console.log("World!"); }, 5000);
+
 if (result == "chyba stroje"){
     //Nastavit timeout aby se nacetla stranka
     setTimeout(() => {
-        var error_message =  prompt("Chyba stroje\nVepiste poznamku/duvod chyby: "); 
-        if (chosen_ok_input(error_message) == true){
-            save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
-            ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ error_message);
-        }  
+        var error_message =  "Vepiste poznamku/duvod chyby: ";   
+        custom_prompt(error_message);
     }, 500);
 }
 
+function custom_prompt(text){
+    document.querySelector("#prompttext").innerText = text;
+    document.querySelector("#custom_prompt").classList.remove("hidden");
+    return new Promise((resolve, reject) => {
+        document.querySelector("#promptbutton").onclick = () =>{
+            resolve(document.querySelector("#promptinput").value);
+            document.querySelector("#custom_prompt").classList.add("hidden");
 
-
-
+            save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
+            ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ document.querySelector("#promptinput").value);
+            waiting_for_input = false;
+             
+        }
+    });
+}
 

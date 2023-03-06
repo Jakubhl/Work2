@@ -1,6 +1,18 @@
 
 h1{
 
-    color: red;
+    color: blue;
     font: bold;
+}
+result{
+    background-color: white;
+    
+}
+body {
+    text-align: left;
+    padding: 2%;
+    background-color: lightgray;
+}
+.hidden{
+    display:none;
 }
