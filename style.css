@@ -1,12 +1,18 @@
 
 h1{
 
-    color: blue;
+    color: white;
     font: bold;
+    background-color: blue;
 }
 result{
-    background-color: white;
-    
+    color: white;
+    font: bold;
+    background-color: blue;
+
+}
+controls{
+    text-justify: auto;
 }
 body {
     text-align: left;

@@ -27,19 +27,25 @@ function save_data_to_server(data) {
     
     console.log(data);
 }
-function current_controls(){
+function current_controls(no_alert){
     var list = "";
     for (let i = 0; i < data.status.length; i++) {
-        list += (data.status[i].control + ": " + data.status[i].label + ": " + data.status[i].state + " " + state_behaviour.label[data.status[i].state].Task + "\n")
+        list += ("(č.: " + (i + 1) + ") " + data.status[i].control + ": " + data.status[i].label + ": " + data.status[i].state + " " + state_behaviour.label[data.status[i].state].Task + "\n")
     }
-    alert(list)
+    if(no_alert == false){
+        alert(list)
+    } 
+    return list;
 }
-function current_logic(){
+function current_logic(no_alert){
     var list = "";
     for (let i = 0; i < state_data.logic.length; i++) {
-        list += (state_data.logic[i].state_label + ", " + state_data.logic[i].combination + " (" + current_state_by_words(state_data.logic[i].combination) + ")" + "\n")
+        list += ("(č.: " + i + ") " + state_data.logic[i].state_label + ", " + state_data.logic[i].combination + " (" + current_state_by_words(state_data.logic[i].combination) + ")" + "\n")
     }
-    alert(list)
+    if(no_alert == false){
+        alert(list)
+    }
+    return list;
 }
 
 function add_control(){
@@ -105,6 +111,48 @@ function add_control(){
             }           
         }
     }  
+}
+
+function delete_control(){
+    var completed = false;
+    while(completed != true && completed != "cancelled"){
+        var which = prompt("Kterou kontrolku si prejete odstranit? \nVyberte v rozsahu od: 1 do: " + data.status.length + "\n\n" + current_controls(true));
+        if(chosen_ok_input(which) == true){
+            if(range_input_right(which,1,data.status.length) == true){
+                var really = confirm("Opravdu si prejete samzat kontrolku s nazvem: " + data.status[which - 1].label + " ?");
+                if(really == true){
+                    var name_to_delete = data.status[which - 1].label;
+                    if(which < data.status.length) {
+                        //posun ostatnich kontrolek, pokud je predesla podminka rovna, staci jen smazat...
+                        for(let i = which; i < data.status.length; i++){
+                            data.status[i-1].control = data.status[i].control;
+                            data.status[i-1].label = data.status[i].label;
+                            data.status[i-1].state = data.status[i].state;
+                        }
+                    }
+                    //mazani logiky s danou kontrolkou:
+                    for(let i = 0; i < state_data.logic.length; i++){
+                        const array = state_data.logic[i].combination
+                        array.splice((which-1),1,)
+                        //console.log(array)
+                    }
+                    //smazani
+                    alert("Byla smazana kontrolka s nazvem: " + name_to_delete);
+                    console.log("Byla smazana kontrolka s nazvem: " + name_to_delete);
+                    data.status.length -=1;
+                    completed = true;
+
+                }else {
+                    alert("Mazani zruseno")
+                    console.log("Mazani zruseno")
+                    completed = "cancelled";
+                }
+            } 
+        } else {
+            completed = "cancelled";
+        }
+    }
+    return completed;
 }
 
 function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_control){
@@ -226,7 +274,7 @@ function customise_logic(){
     var pick_successful = false;
     var state_pick = "";
     while(pick_successful == false && state_pick != null){
-        var state_pick = prompt("U jakeho stavu chcete zmenit logiku kontrolek? \n(Vepiste cislo od 0 nebo cely nazev bez diakritiky)");
+        var state_pick = prompt("U jakeho stavu chcete zmenit logiku kontrolek? \n(Vepiste cislo od 0 nebo cely nazev bez diakritiky)" + "\n\n" + current_logic(true));
         //pokud nebylo zruseno...
         if (chosen_ok_input(state_pick) == true) {
             for (let i = 0; i < state_data.logic.length; i++) {
