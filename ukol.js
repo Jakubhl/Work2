@@ -63,31 +63,42 @@ function add_control(){
                 if(chosen_ok_input(control_states) == true){
                     if(range_input_right(control_states,1,3) == true){
                         //nastaveni logiky s novou kontrolkou u vsech kombinaci
-                        for (let i = 0; i < state_data.logic.length; i++) {
-                            //pro pripadne preruseni for cylku:
-                            if(end_add_control == false){
-                                var new_logic_set = prompt("Nastavte logiku s novou kontrolkou pro: " + state_data.logic[i].combination + " \ntedy, " + state_data.logic[i].state_label + " (č.: " + i + ")"
-                                + "\n(s novou kontrolkou jiz: " + (data.status.length+1) +" stavu)");
-                                if(chosen_ok_input(new_logic_set) == true){
-                                    right_input = logic_verification(new_logic_set,false,true,i,0,2);
-                                    if(right_input == false){
-                                        //vratime se o krok zpet...
-                                        i -=1;
-                                    } else{
-                                        //prenastaveni logiky v pripade spravneho inputu:
-                                        new_logic_set = new_logic_set.replace(/\ /g, ',');
-                                        new_logic_set = new_logic_set.replace(/\./g, ',');
-                                        state_data.logic[i].combination = new_logic_set;
-                                    }
-                                } else {
-                                    end_add_control = confirm("Veskere nastaveni, co jste doted provedli bude zruseno, opravdu si prejete prerusit zadavani?");
-                                    if(end_add_control == false){
-                                        //vratime se o krok zpet... jinak operace prerusena...
-                                        i -=1;
+                        var manually = confirm("Prejete si prednastavit u nove kontrolky pro kazdou logiku zakladni stav, 0 (nesviti)?\nNebo nastavit manualne? ")
+                        if(manually == false){
+                            for (let i = 0; i < state_data.logic.length; i++) {
+                                //pro pripadne preruseni for cylku:
+                                if(end_add_control == false){
+                                    var new_logic_set = prompt("Nastavte logiku s novou kontrolkou pro: " + state_data.logic[i].combination + " \ntedy, " + state_data.logic[i].state_label + " (č.: " + i + ")"
+                                    + "\n(s novou kontrolkou jiz: " + (data.status.length+1) +" stavu)");
+                                    if(chosen_ok_input(new_logic_set) == true){
+                                        right_input = logic_verification(new_logic_set,false,true,i,0,2);
+                                        if(right_input == false){
+                                            //vratime se o krok zpet...
+                                            i -=1;
+                                        } else{
+                                            //prenastaveni logiky v pripade spravneho inputu:
+                                            new_logic_set = new_logic_set.replace(/\ /g, ',');
+                                            new_logic_set = new_logic_set.replace(/\./g, ',');
+                                            state_data.logic[i].combination = new_logic_set;
+                                        }
+                                    } else {
+                                        end_add_control = confirm("Veskere nastaveni, co jste doted provedli bude zruseno, opravdu si prejete prerusit zadavani?");
+                                        if(end_add_control == false){
+                                            //vratime se o krok zpet... pokud true, operace prerusena...
+                                            i -=1;
+                                        }
                                     }
                                 }
                             }
-                        }
+                        } else { 
+                            for (let i = 0; i < state_data.logic.length; i++) {
+                                new_logic_set = state_data.logic[i].combination  + ",0";//.append("0");
+                                state_data.logic[i].combination = new_logic_set;
+                            }
+                            console.log("Pro novou kontrolku byly prednastaveny logiky se stavem 0 (nesviti)" +"\n\n"+ current_logic(true));
+                            alert("Pro novou kontrolku byly prednastaveny logiky se stavem 0 (nesviti)" +"\n\n"+ current_logic(true));
+                            right_input = true;
+                        }                       
                         
                         if(end_add_control == false && right_input == true){
 
@@ -403,47 +414,26 @@ state_data = {
 //MAIN---------------------------------------------------------------------------------------------------------------------
 
 function main(){
-    //document.getElementById("div1g").innerHTML+="WHATEVER YOU WANT...";
-    //document.getElementById("div1g").innerHTML += 'hi';
     document.write("<div1>Stroj: " + data.machine +
     "\n<h3>Stav stroje: </h3>" +
     "\nKontrolka: </div1>");
     document.write("<div1><br></div1>");
-    
-    /*document.write("<br>");
-    document.write("<h3>Stav stroje: </h3>");
-    document.write("Kontrolka: ");
-    document.write("<br>");*/
+
     //Vypis aktualnich nahodnych stavu kontrolek:
-    var current_combination = [0,0,0,0]
+    current_combination = [0,0,0,0]
     for (let i = 0; i < data.status.length; i++) {
         current_combination[i] = data.status[i].state
-        document.write("<controls>" + data.status[i].control + ": " + data.status[i].label + ":" + " " + state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")</controls>")
-        document.write("<controls><br></controls>");
+    //    document.write("<controls>" + data.status[i].control + ": " + data.status[i].label + ":" + " " + state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")</controls>")
+    //    document.write("<controls><br></controls>");
     }
-
     // Hledani shody nahodnych stavu s nastavenou logikou a prirazeni stavu stroje:
-    var sum_of_bad_combinations = 0;
+    //var sum_of_bad_combinations = 0;
     var result = "";
    
     for (let i = 0; i < state_data.logic.length; i++) {
         if (current_combination.toString() == state_data.logic[i].combination.toString()){
-            //console.log(state_data.logic[i].state_label)
             result = state_data.logic[i].state_label;
-            document.write("<result><br></result>");
-            document.write("<result>Vysledek: " + state_data.logic[i].state_label + "</result>")
-            document.write("<result><br></result>");
-     
-        } else {
-            sum_of_bad_combinations += 1;
         }
-    }
-    
-    //Pokud nebyla nalezena jedina shoda:
-    if (sum_of_bad_combinations == state_data.logic.length){
-        document.write("<result><br></result>");  
-        document.write("<result>Vysledek: neplatny stav</result>")
-        document.write("<result><br></result>");  
     }
     return result;
 }
@@ -474,3 +464,69 @@ function custom_prompt(text){
     });
 }
 
+var rows;
+var cols;
+
+function createTable(rows, cols) {
+    var table = document.createElement('table');
+    table.setAttribute('border', '1');
+    /*for (let i = 0; i < rows; i++) {
+        var tRow = document.createElement('tr');
+        for (let j = 0; j < cols; j++) {
+        var tData = document.createElement('td');
+        tData.textContent = result;
+
+
+        tRow.appendChild(tData);
+        }
+        
+    }*/
+    var current_combination = [0,0,0,0]
+    for (let i = 0; i < data.status.length; i++) {
+        current_combination[i] = data.status[i].state;
+
+        var tRow = document.createElement('tr');
+        var tData = document.createElement('td');
+
+        tData.textContent = data.status[i].control + "\xa0\xa0\xa0\xa0";
+        tRow.appendChild(tData);
+
+        var tData = document.createElement('td');
+
+        tData.textContent = data.status[i].label + "\xa0\xa0\xa0\xa0";
+        tRow.appendChild(tData);
+
+        var tData = document.createElement('td');
+        
+        tData.textContent = state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")" + "\xa0\xa0\xa0\xa0";
+        tRow.appendChild(tData);
+        table.appendChild(tRow);
+    }
+
+    
+
+    var tRow = document.createElement('tr');
+    var tData = document.createElement('td');
+        tData.textContent = "Vysledek: ";
+        tRow.appendChild(tData);
+    var tData = document.createElement('td');
+    var sum_of_bad_combinations = 0;
+
+    for (let i = 0; i < state_data.logic.length; i++) {
+        if (current_combination.toString() == state_data.logic[i].combination.toString()){
+            tData.textContent = state_data.logic[i].state_label;  
+        } else {
+            sum_of_bad_combinations += 1;
+        }
+    }
+    if (sum_of_bad_combinations == state_data.logic.length){
+        tData.textContent = "neplatny stav";       
+    }
+
+    tRow.appendChild(tData);
+    table.appendChild(tRow);
+    
+    document.body.appendChild(table);
+    }
+    
+createTable(2, 4);

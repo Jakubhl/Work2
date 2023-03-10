@@ -3,7 +3,7 @@ h1{
 
     color: white;
     font: bold;
-    background-color: blue;
+    background-color: black;
 }
 result{
     color: white;
@@ -17,8 +17,12 @@ controls{
 body {
     text-align: left;
     padding: 2%;
-    background-color: lightgray;
+    color: white;
+    background-color: black;
 }
 .hidden{
     display:none;
 }
+table, th, td {
+    border:1px solid white;
+  }
