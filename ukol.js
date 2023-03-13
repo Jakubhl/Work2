@@ -114,7 +114,7 @@ function add_control(){
                             alert("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
                             //Refresh stranky:
                             //document.write("<controls>" + control_name + ": " + control_label + ":" + " " + state_behaviour.label[control_states].Task + " (" + control_states + ")</controls>")
-                            //main();
+                            main(true);
                             finished = true; 
                         }  
                     }
@@ -164,6 +164,33 @@ function delete_control(){
         }
     }
     return completed;
+}
+
+function delete_logic(){
+    var which_one = prompt("Jakou logiku kontrolek si preje odstranit? Vepiste cislo od 0 do: "+(state_data.logic.length-1)+ "\n\n" + current_logic(true));
+    if(chosen_ok_input(which_one) == true){
+        if(range_input_right(which_one,0,(state_data.logic.length-1)) == true){
+            logic_to_delete = state_data.logic[which_one].state_label
+            var really = confirm("Opravdu si prejete odstranit logiku s nazvem: " + state_data.logic[which_one].state_label);
+            if(really == true){
+                if(which_one < state_data.logic.length) {
+                    for(let i = Number(which_one); i < state_data.logic.length-1; i++){
+                        //if(i+1 < state_data.logic.length){
+                            console.log(state_data.logic[i].state_label)
+                            console.log(state_data.logic[i+1].state_label)
+                            state_data.logic[i].combination = state_data.logic[i+1].combination
+                            state_data.logic[i].state_label = state_data.logic[i+1].state_label
+                        //}else{
+                        //    console.log(i+1)
+                        //}
+                        
+                    }
+                    alert("Byla smazana logika s nazvem: " + logic_to_delete)
+                    state_data.logic.length -= 1;
+                }        
+            }
+        }
+    }
 }
 
 function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_control){
@@ -413,58 +440,11 @@ state_data = {
 
 //MAIN---------------------------------------------------------------------------------------------------------------------
 
-function main(){
 
-    //Vypis aktualnich nahodnych stavu kontrolek:
-    current_combination = [0,0,0,0]
-    for (let i = 0; i < data.status.length; i++) {
-        current_combination[i] = data.status[i].state
-    //    document.write("<controls>" + data.status[i].control + ": " + data.status[i].label + ":" + " " + state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")</controls>")
-    //    document.write("<controls><br></controls>");
-    }
-    // Hledani shody nahodnych stavu s nastavenou logikou a prirazeni stavu stroje:
-    //var sum_of_bad_combinations = 0;
-    var result = "";
-   
-    for (let i = 0; i < state_data.logic.length; i++) {
-        if (current_combination.toString() == state_data.logic[i].combination.toString()){
-            result = state_data.logic[i].state_label;
-        }
-    }
-    return result;
-}
 
-result = main();
-
-if (result == "chyba stroje"){
-    //Nastavit timeout aby se nacetla stranka
-    setTimeout(() => {
-        var error_message =  "Vepiste poznamku/duvod chyby: ";   
-        custom_prompt(error_message);
-    }, 500);
-}
-
-function custom_prompt(text){
-    document.querySelector("#prompttext").innerText = text;
-    document.querySelector("#custom_prompt").classList.remove("hidden");
-    return new Promise((resolve, reject) => {
-        document.querySelector("#promptbutton").onclick = () =>{
-            resolve(document.querySelector("#promptinput").value);
-            document.querySelector("#custom_prompt").classList.add("hidden");
-
-            save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
-            ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ document.querySelector("#promptinput").value);
-            waiting_for_input = false;
-             
-        }
-    });
-}
-
-var rows;
-var cols;
-
-function createTable() {
+function main(exception) {
     var table = document.createElement('table');
+    table.setAttribute('id', 'main_table');
     table.setAttribute('border', '2');
     var tRow = document.createElement('tr');
     var tData = document.createElement("td");
@@ -527,9 +507,10 @@ function createTable() {
     tData.className = "result";
     tData.colSpan = 2;
     var sum_of_bad_combinations = 0;
-
+    var result = "";
     for (let i = 0; i < state_data.logic.length; i++) {
         if (current_combination.toString() == state_data.logic[i].combination.toString()){
+            result = state_data.logic[i].state_label;
             tData.textContent = state_data.logic[i].state_label ;  
         } else {
             sum_of_bad_combinations += 1;
@@ -541,8 +522,39 @@ function createTable() {
 
     tRow.appendChild(tData);
     table.appendChild(tRow);
-    
-    document.body.appendChild(table);
+    if(exception != true){
+        document.body.appendChild(table);
+    } else{
+    table = table.outerHTML
+    document.getElementById("main_table").innerHTML = table;
     }
+
+    return result;
+}
     
-createTable();
+result = main(false);
+
+if (result == "chyba stroje"){
+    //Nastavit timeout aby se nacetla stranka
+    setTimeout(() => {
+        var error_message =  "Vepiste poznamku/duvod chyby: ";   
+        custom_prompt(error_message);
+    }, 500);
+}
+
+function custom_prompt(text){
+    document.querySelector("#prompttext").innerText = text;
+    document.querySelector("#custom_prompt").classList.remove("hidden");
+    return new Promise((resolve, reject) => {
+        document.querySelector("#promptbutton").onclick = () =>{
+            resolve(document.querySelector("#promptinput").value);
+            document.querySelector("#custom_prompt").classList.add("hidden");
+
+            save_data_to_server("timestamp: " + data.timestamp + ", stroj: " + data.machine + 
+            ", stav stroje: "+ state_data.logic[4].state_label + ", poznamka: "+ document.querySelector("#promptinput").value);
+            waiting_for_input = false;
+             
+        }
+    });
+}
+
