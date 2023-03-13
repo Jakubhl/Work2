@@ -47,7 +47,7 @@ function current_logic(no_alert){
     }
     return list;
 }
-
+var more_columns = 0;
 function add_control(){
     var control_name = prompt("Zadejte nazev nove kontrolky")
     if(chosen_ok_input(control_name)==true){
@@ -114,7 +114,8 @@ function add_control(){
                             alert("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
                             //Refresh stranky:
                             //document.write("<controls>" + control_name + ": " + control_label + ":" + " " + state_behaviour.label[control_states].Task + " (" + control_states + ")</controls>")
-                            main(true);
+                            more_columns +=1;
+                            main();
                             finished = true; 
                         }  
                     }
@@ -439,64 +440,55 @@ state_data = {
 }
 
 //MAIN---------------------------------------------------------------------------------------------------------------------
-
-
-
-function main(exception) {
+function main() {
     var table = document.createElement('table');
-    table.setAttribute('id', 'main_table');
+    //table.setAttribute('id', 'main_table');
     table.setAttribute('border', '2');
     var tRow = document.createElement('tr');
     var tData = document.createElement("td");
     tData.className = "bold";
-    tData.colSpan = 3;
+    tData.colSpan = 5 + more_columns;
     tData.textContent = "Stav stroje (" + data.machine + ")";
 
     tRow.appendChild(tData);
     table.appendChild(tRow);
 
-
     var tRow = document.createElement('tr');
-    var tData = document.createElement("td");
+    var tData = document.createElement('td');
     tData.className = "bold2";
-    tData.textContent = "Kontrolka";
-    tRow.appendChild(tData);
-    var tData = document.createElement("td");
-    tData.className = "bold2";
-    tData.textContent = "Popis";
-    tRow.appendChild(tData);
-    var tData = document.createElement("td");
-    tData.className = "bold2";
-    tData.textContent = "Stav";
+    tData.textContent ="Kontrolka:"
     tRow.appendChild(tData);
 
-    
-    table.appendChild(tRow);
-
-    
     var current_combination = [0,0,0,0]
     for (let i = 0; i < data.status.length; i++) {
         current_combination[i] = data.status[i].state;
 
-        var tRow = document.createElement('tr');
         var tData = document.createElement('td');
-
-        tData.textContent = data.status[i].control;
+        tData.textContent = data.status[i].control + "\n (" + data.status[i].label + ")";
         tRow.appendChild(tData);
-
-        var tData = document.createElement('td');
-
-        tData.textContent = data.status[i].label;
-        tRow.appendChild(tData);
-
-        var tData = document.createElement('td');
-        
-        tData.textContent = state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")" + "\xa0\xa0\xa0\xa0";
-        tRow.appendChild(tData);
-        table.appendChild(tRow);
     }
 
-    
+    table.appendChild(tRow);
+    var tRow = document.createElement('tr');
+    var tData = document.createElement('td');
+    tData.className = "bold2";
+    tData.textContent ="Stav:"
+    tRow.appendChild(tData);
+
+    for (let i = 0; i < data.status.length; i++) {
+    var tData = document.createElement('td');
+        if(data.status[i].state == 0){
+            tData.className = "nesviti"; 
+        } else if(data.status[i].state==1){
+            tData.className = "sviti"; 
+        } else if(data.status[i].state==2){
+            tData.className = "blika"; 
+        }
+        
+        tData.textContent = state_behaviour.label[data.status[i].state].Task + " (" + data.status[i].state + ")" ;
+        tRow.appendChild(tData);
+    }
+    table.appendChild(tRow);
 
     var tRow = document.createElement('tr');
     var tData = document.createElement('td');
@@ -505,7 +497,7 @@ function main(exception) {
     tRow.appendChild(tData);
     var tData = document.createElement("td");
     tData.className = "result";
-    tData.colSpan = 2;
+    tData.colSpan = 4 + more_columns;
     var sum_of_bad_combinations = 0;
     var result = "";
     for (let i = 0; i < state_data.logic.length; i++) {
@@ -522,17 +514,14 @@ function main(exception) {
 
     tRow.appendChild(tData);
     table.appendChild(tRow);
-    if(exception != true){
-        document.body.appendChild(table);
-    } else{
-    table = table.outerHTML
-    document.getElementById("main_table").innerHTML = table;
-    }
+
+    document.getElementById("main_table").innerHTML = table.outerHTML;
+    
 
     return result;
 }
     
-result = main(false);
+result = main();
 
 if (result == "chyba stroje"){
     //Nastavit timeout aby se nacetla stranka
@@ -558,3 +547,77 @@ function custom_prompt(text){
     });
 }
 
+var click_count = 0;
+function change_color(){
+    const btn = document.getElementById('change_color'); 
+    click_count += 1;
+    
+    if(click_count == 1){
+        btn.style.backgroundColor = 'white';
+    }
+    if(click_count == 2){
+        btn.style.backgroundColor = 'limegreen';
+    }
+    if(click_count == 3){
+        btn.style.backgroundColor = 'turquoise';
+        click_count = 0;
+    }
+}
+
+function logic_table(){
+    var table = document.createElement('table');
+    table.setAttribute('border', '2');
+    //Nadpis
+    var tRow = document.createElement('tr');
+    var tData = document.createElement("td");
+    tData.className = "bold";
+    tData.colSpan = 5 + more_columns;
+    tData.textContent = "Tabulka nastavene logiky";
+
+    tRow.appendChild(tData);
+    table.appendChild(tRow);
+
+    var tRow = document.createElement('tr');
+    var tData = document.createElement('td');
+    tData.className = "bold2";
+    tData.textContent ="Kontrolka:"
+    tRow.appendChild(tData);
+
+    for (let i = 0; i < data.status.length; i++) {
+        var tData = document.createElement('td');
+        tData.textContent = data.status[i].control + " (" + data.status[i].label + ")";
+        tRow.appendChild(tData);
+    }
+
+    table.appendChild(tRow);
+    for(let i = 0; i < state_data.logic.length; i++) {
+        var tRow = document.createElement('tr');
+        var tData = document.createElement('td');
+        if(state_data.logic[i].state_label == result){
+            tData.className = "result";
+        }else{
+            tData.className = "bold2";
+        }
+        tData.textContent = state_data.logic[i].state_label;
+        tRow.appendChild(tData);
+
+        for (let j = 0; j < state_data.logic[i].combination.length; j++) {
+        var tData = document.createElement('td');
+            if(state_data.logic[i].combination[j] == 0){
+                tData.className = "nesviti"; 
+            } else if(state_data.logic[i].combination[j]==1){
+                tData.className = "sviti"; 
+            } else if(state_data.logic[i].combination[j]==2){
+                tData.className = "blika"; 
+            }
+            
+            //tData.textContent = state_behaviour.label[data.status[j].state].Task + " (" + data.status[j].state + ")" ;
+            tData.textContent = state_behaviour.label[state_data.logic[i].combination[j]].Task + " (" + state_data.logic[i].combination[j] + ")" ;
+            tRow.appendChild(tData);
+        }
+    table.appendChild(tRow);
+    }
+   
+    document.getElementById("logic_table").innerHTML = table.outerHTML;
+}
+logic_table();

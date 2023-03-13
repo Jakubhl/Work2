@@ -1,17 +1,9 @@
-
-
 <html>
 <link rel="stylesheet" href="style.css" />
 
 <header>
     <h1 id = "top_header">Zkušební zadání</h1>
 </header>
-<head>
-    <script src="ukol.js">
-        
-    </script>
-
-</head>
 
 <body>
       
@@ -40,6 +32,9 @@
             <td>
                 <button class="glow-on-hover" onclick="current_controls(false)">seznam kontrolek</button>
             </td>
+            <td>
+                <button id = "change_color" onclick = "change_color()">zmena barvy</button>
+            </td>
             
         </tr>
         <tr>
@@ -52,6 +47,7 @@
             
         </tr> 
     </table>
+    
     <br>
     <div class = "hidden" id= "custom_prompt">
         <div id = "prompttext">
@@ -62,13 +58,15 @@
             Ulozit
         </button>
     </div>
-    <br>
 
+    <br>
+    <div id = "logic_table"></div>   
     
 </body>
 
+<script src="ukol.js">
+</script>
 
-    
 </html>
 
 
