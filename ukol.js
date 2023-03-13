@@ -468,12 +468,13 @@ state_data = {
 
 //MAIN---------------------------------------------------------------------------------------------------------------------
 function main() {
+    //vytvareni hlavni tabulky aktualniho stavu
     var table = document.createElement('table');
-    //table.setAttribute('id', 'main_table');
     table.setAttribute('border', '2');
     var tRow = document.createElement('tr');
     var tData = document.createElement("td");
     tData.className = "bold";
+    //flexibilne spojuji bunky podle poctu kontrolek
     tData.colSpan = 5 + more_columns;
     tData.textContent = "Stav stroje (" + data.machine + ")";
 
@@ -485,7 +486,7 @@ function main() {
     tData.className = "bold2";
     tData.textContent ="Kontrolka:"
     tRow.appendChild(tData);
-
+    //vypisovani kontrolek
     var current_combination = [0,0,0,0]
     for (let i = 0; i < data.status.length; i++) {
         current_combination[i] = data.status[i].state;
@@ -501,7 +502,7 @@ function main() {
     tData.className = "bold2";
     tData.textContent ="Stav:"
     tRow.appendChild(tData);
-
+    //vypisovani stavu kontrolek
     for (let i = 0; i < data.status.length; i++) {
     var tData = document.createElement('td');
         if(data.status[i].state == 0){
@@ -516,7 +517,7 @@ function main() {
         tRow.appendChild(tData);
     }
     table.appendChild(tRow);
-
+    //vypisovani a overovani vysledku
     var tRow = document.createElement('tr');
     var tData = document.createElement('td');
     tData.className = "bold2";
@@ -544,7 +545,6 @@ function main() {
 
     document.getElementById("main_table").innerHTML = table.outerHTML;
     
-    
     return result;
 }
     
@@ -557,7 +557,7 @@ if (result == "chyba stroje"){
         custom_prompt(error_message);
     }, 500);
 }
-
+//zvlastni okno pro zapsani duvodu chyby stroje
 function custom_prompt(text){
     document.querySelector("#prompttext").innerText = text;
     document.querySelector("#custom_prompt").classList.remove("hidden");
@@ -574,6 +574,7 @@ function custom_prompt(text){
     });
 }
 
+/* TEST zmeny barvy
 var click_count = 0;
 function change_color(){
     const btn = document.getElementById('change_color'); 
@@ -589,8 +590,8 @@ function change_color(){
         btn.style.backgroundColor = 'turquoise';
         click_count = 0;
     }
-}
-
+}*/
+//Vypis aktualni logicke tabulky
 function logic_table(){
     var table = document.createElement('table');
     table.setAttribute('border', '2');
@@ -620,6 +621,7 @@ function logic_table(){
         var tRow = document.createElement('tr');
         var tData = document.createElement('td');
         if(state_data.logic[i].state_label == result){
+            //zvyrazneni vysledku
             tData.className = "result";
         }else{
             tData.className = "bold2";
