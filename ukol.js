@@ -414,10 +414,6 @@ state_data = {
 //MAIN---------------------------------------------------------------------------------------------------------------------
 
 function main(){
-    document.write("<div1>Stroj: " + data.machine +
-    "\n<h3>Stav stroje: </h3>" +
-    "\nKontrolka: </div1>");
-    document.write("<div1><br></div1>");
 
     //Vypis aktualnich nahodnych stavu kontrolek:
     current_combination = [0,0,0,0]
@@ -467,20 +463,37 @@ function custom_prompt(text){
 var rows;
 var cols;
 
-function createTable(rows, cols) {
+function createTable() {
     var table = document.createElement('table');
-    table.setAttribute('border', '1');
-    /*for (let i = 0; i < rows; i++) {
-        var tRow = document.createElement('tr');
-        for (let j = 0; j < cols; j++) {
-        var tData = document.createElement('td');
-        tData.textContent = result;
+    table.setAttribute('border', '2');
+    var tRow = document.createElement('tr');
+    var tData = document.createElement("td");
+    tData.className = "bold";
+    tData.colSpan = 3;
+    tData.textContent = "Stav stroje (" + data.machine + ")";
+
+    tRow.appendChild(tData);
+    table.appendChild(tRow);
 
 
-        tRow.appendChild(tData);
-        }
-        
-    }*/
+    var tRow = document.createElement('tr');
+    var tData = document.createElement("td");
+    tData.className = "bold2";
+    tData.textContent = "Kontrolka";
+    tRow.appendChild(tData);
+    var tData = document.createElement("td");
+    tData.className = "bold2";
+    tData.textContent = "Popis";
+    tRow.appendChild(tData);
+    var tData = document.createElement("td");
+    tData.className = "bold2";
+    tData.textContent = "Stav";
+    tRow.appendChild(tData);
+
+    
+    table.appendChild(tRow);
+
+    
     var current_combination = [0,0,0,0]
     for (let i = 0; i < data.status.length; i++) {
         current_combination[i] = data.status[i].state;
@@ -488,12 +501,12 @@ function createTable(rows, cols) {
         var tRow = document.createElement('tr');
         var tData = document.createElement('td');
 
-        tData.textContent = data.status[i].control + "\xa0\xa0\xa0\xa0";
+        tData.textContent = data.status[i].control;
         tRow.appendChild(tData);
 
         var tData = document.createElement('td');
 
-        tData.textContent = data.status[i].label + "\xa0\xa0\xa0\xa0";
+        tData.textContent = data.status[i].label;
         tRow.appendChild(tData);
 
         var tData = document.createElement('td');
@@ -507,20 +520,23 @@ function createTable(rows, cols) {
 
     var tRow = document.createElement('tr');
     var tData = document.createElement('td');
-        tData.textContent = "Vysledek: ";
-        tRow.appendChild(tData);
-    var tData = document.createElement('td');
+    tData.className = "bold2";
+    tData.textContent = "Vysledek: ";
+    tRow.appendChild(tData);
+    var tData = document.createElement("td");
+    tData.className = "result";
+    tData.colSpan = 2;
     var sum_of_bad_combinations = 0;
 
     for (let i = 0; i < state_data.logic.length; i++) {
         if (current_combination.toString() == state_data.logic[i].combination.toString()){
-            tData.textContent = state_data.logic[i].state_label;  
+            tData.textContent = state_data.logic[i].state_label ;  
         } else {
             sum_of_bad_combinations += 1;
         }
     }
     if (sum_of_bad_combinations == state_data.logic.length){
-        tData.textContent = "neplatny stav";       
+        tData.textContent =  "neplatny stav" ;       
     }
 
     tRow.appendChild(tData);
@@ -529,4 +545,4 @@ function createTable(rows, cols) {
     document.body.appendChild(table);
     }
     
-createTable(2, 4);
+createTable();
