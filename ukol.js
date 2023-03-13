@@ -115,7 +115,8 @@ function add_control(){
                             //Refresh stranky:
                             //document.write("<controls>" + control_name + ": " + control_label + ":" + " " + state_behaviour.label[control_states].Task + " (" + control_states + ")</controls>")
                             more_columns +=1;
-                            main();
+                            result = main();
+                            logic_table();
                             finished = true; 
                         }  
                     }
@@ -144,14 +145,24 @@ function delete_control(){
                     }
                     //mazani logiky s danou kontrolkou:
                     for(let i = 0; i < state_data.logic.length; i++){
-                        const array = state_data.logic[i].combination
-                        array.splice((which-1),1,)
+                        //pro splice funkci bylo potreba predelat do pole, protoze s novou kontrolkou uz to bralo jako string
+                        var no_comma = state_data.logic[i].combination;
+                        no_comma = no_comma.toString();
+                        no_comma = no_comma.replace(/\,/g, ' ');
+                        no_comma = no_comma.replace(/\ /g, '');
+                        const array = Array.from(no_comma);
                         //console.log(array)
+                        array.splice((which-1),1)
+                        //console.log(array)
+                        state_data.logic[i].combination = array;
                     }
                     //smazani
                     alert("Byla smazana kontrolka s nazvem: " + name_to_delete);
                     console.log("Byla smazana kontrolka s nazvem: " + name_to_delete);
                     data.status.length -=1;
+                    //REFRESH
+                    result = main();
+                    logic_table();
                     completed = true;
 
                 }else {
@@ -176,18 +187,14 @@ function delete_logic(){
             if(really == true){
                 if(which_one < state_data.logic.length) {
                     for(let i = Number(which_one); i < state_data.logic.length-1; i++){
-                        //if(i+1 < state_data.logic.length){
-                            console.log(state_data.logic[i].state_label)
-                            console.log(state_data.logic[i+1].state_label)
-                            state_data.logic[i].combination = state_data.logic[i+1].combination
-                            state_data.logic[i].state_label = state_data.logic[i+1].state_label
-                        //}else{
-                        //    console.log(i+1)
-                        //}
-                        
+                        state_data.logic[i].combination = state_data.logic[i+1].combination
+                        state_data.logic[i].state_label = state_data.logic[i+1].state_label
                     }
                     alert("Byla smazana logika s nazvem: " + logic_to_delete)
                     state_data.logic.length -= 1;
+                    //REFRESH
+                    result = main();
+                    logic_table();
                 }        
             }
         }
@@ -214,9 +221,6 @@ function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_
     
     input = input.replace(/\ /g, ',');
     input = input.replace(/\./g, ',');
-    //console.log(input)
-    //console.log(correct_numbers)
-    //console.log( String(state_data.logic[chosen_logic].combination).length + adding_new_control)
     //adding new control uz vyzaduje logiku o 1 delsi...
     if ((input.length == String(state_data.logic[chosen_logic].combination).length + adding_new_control) && (correct_numbers == String(state_data.logic[chosen_logic].combination).length + adding_new_control)){
         right_input = true;
@@ -227,8 +231,7 @@ function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_
     change_successful = false;
     if(right_input == true) {
         //Probiha overovani...
-        //Pokud je rovno, netreba prepisovat + nesmi byt kombinace jiz obsazena (for cyklus)
-        if (state_data.logic[chosen_logic].combination != input){
+        if(add == true){
             var match = false;
             for (let i = 0; i < state_data.logic.length; i++) {
                 if (input == state_data.logic[i].combination){
@@ -241,7 +244,29 @@ function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_
                 
             } else {
                 console.log("Kombinace: " + input + " je jiz zabrana")
-                var repeat = confirm("Kombinace: " + input + " je jiz zabrana." + "\nPrejete si zmenit zadanou odpoved? Nebo ponechat stejnou? ")
+                var repeat = confirm("Kombinace: " + input + " je jiz zabrana." + "\nPrejete si zmenit zadanou odpoved(OK)? Nebo ponechat stejnou? ")
+                if(repeat == true){
+                    right_input = false;
+                } else {
+                    change_successful = true;
+                }
+            }
+                     
+        }else if (change == true){
+            if (state_data.logic[chosen_logic].combination != input){
+            var match = false;
+            for (let i = 0; i < state_data.logic.length; i++) {
+                if (input == state_data.logic[i].combination){
+                    match = true;
+                }
+            }
+            console.log(match)
+            if (match == false){
+                change_successful = true;
+                
+            } else {
+                console.log("Kombinace: " + input + " je jiz zabrana")
+                var repeat = confirm("Kombinace: " + input + " je jiz zabrana." + "\nPrejete si zmenit zadanou odpoved(OK)? Nebo ponechat stejnou? ")
                 if(repeat == true){
                     right_input = false;
                 } else {
@@ -249,17 +274,15 @@ function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_
                 }
             }
             
-        } else if(change == true) {
-            console.log("Kombinace je stejna, netreba menit");
-            var repeat = confirm("Kombinace je stejna, netreba menit.\nPrejete si zkusit znovu? ")
-            if(chosen_ok_input(repeat) == true){
-                right_input = false;
-            } else{
-                change_successful = "cancelled";
+            } else if(change == true) {
+                console.log("Kombinace je stejna, netreba menit");
+                var repeat = confirm("Kombinace je stejna, netreba menit.\nPrejete si zkusit znovu? ")
+                if(chosen_ok_input(repeat) == true){
+                    right_input = false;
+                } else{
+                    change_successful = "cancelled";
+                }
             }
-        } else if(add == true) {
-            //nezalezi, ze je stejna, jako porovnavaci
-            change_successful = true;      
         }
     }
     if(change_successful == true){
@@ -302,12 +325,12 @@ function add_logic(){
         "state_label": String(logic_name),
         "combination": logic_combination//.split("")
         }
-         
-    }        
+        //REFRESH
+        result = main();
+        logic_table();
+    }    
 }
 
-//Funkce pro upravu uzivatelem bez znalosti programovani:
-//Prvne vyber logiky pro nastaveni zmeny:
 function customise_logic(){
 
     var pick_successful = false;
@@ -353,6 +376,10 @@ function customise_logic(){
             combination_change = combination_change.replace(/\ /g, ',');
             combination_change = combination_change.replace(/\./g, ',');
             state_data.logic[selected_state].combination = combination_change;
+            //REFRESH
+            //kvuli aktualnimu zvyrazneni vysledku musim volat i main...
+            result = main();
+            logic_table();
         }        
     } 
 }
@@ -517,7 +544,7 @@ function main() {
 
     document.getElementById("main_table").innerHTML = table.outerHTML;
     
-
+    
     return result;
 }
     
@@ -582,7 +609,6 @@ function logic_table(){
     tData.className = "bold2";
     tData.textContent ="Kontrolka:"
     tRow.appendChild(tData);
-
     for (let i = 0; i < data.status.length; i++) {
         var tData = document.createElement('td');
         tData.textContent = data.status[i].control + " (" + data.status[i].label + ")";
@@ -602,22 +628,21 @@ function logic_table(){
         tRow.appendChild(tData);
 
         for (let j = 0; j < state_data.logic[i].combination.length; j++) {
-        var tData = document.createElement('td');
-            if(state_data.logic[i].combination[j] == 0){
-                tData.className = "nesviti"; 
-            } else if(state_data.logic[i].combination[j]==1){
-                tData.className = "sviti"; 
-            } else if(state_data.logic[i].combination[j]==2){
-                tData.className = "blika"; 
-            }
-            
-            //tData.textContent = state_behaviour.label[data.status[j].state].Task + " (" + data.status[j].state + ")" ;
-            tData.textContent = state_behaviour.label[state_data.logic[i].combination[j]].Task + " (" + state_data.logic[i].combination[j] + ")" ;
-            tRow.appendChild(tData);
+            var tData = document.createElement('td');
+            if(state_data.logic[i].combination[j] != ","){
+                if(state_data.logic[i].combination[j] == 0){
+                    tData.className = "nesviti"; 
+                } else if(state_data.logic[i].combination[j]==1){
+                    tData.className = "sviti"; 
+                } else if(state_data.logic[i].combination[j]==2){
+                    tData.className = "blika"; 
+                }
+                tData.textContent = state_behaviour.label[state_data.logic[i].combination[j]].Task + " (" + state_data.logic[i].combination[j] + ")" ;
+                tRow.appendChild(tData);
+            }       
         }
     table.appendChild(tRow);
     }
-   
     document.getElementById("logic_table").innerHTML = table.outerHTML;
 }
 logic_table();
