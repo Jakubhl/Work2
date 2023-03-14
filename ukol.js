@@ -5,19 +5,23 @@ function get_data_from_server() {
         "status": [{
             "control": "I",
             "label": "napajeni zapnuto",
-            "state": Math.floor(Math.random() * 2)
+            "state": Math.floor(Math.random() * 2),
+            "max_states": 1
         }, {
             "control": "START",
             "label": "START produkce",
-            "state": Math.floor(Math.random() * 2)
+            "state": Math.floor(Math.random() * 2),
+            "max_states": 1
         }, {
             "control": "STOP",
             "label": "STOP produkce",
-            "state": Math.floor(Math.random() * 3)
+            "state": Math.floor(Math.random() * 3),
+            "max_states": 2
         }, {
             "control": "sipka nahoru a dolu",
             "label": "zvedani krytu",
-            "state": Math.floor(Math.random() * 2)
+            "state": Math.floor(Math.random() * 2),
+            "max_states": 1
         }]
     }
 }
@@ -68,18 +72,20 @@ function add_control(){
                             for (let i = 0; i < state_data.logic.length; i++) {
                                 //pro pripadne preruseni for cylku:
                                 if(end_add_control == false){
-                                    var new_logic_set = prompt("Nastavte logiku s novou kontrolkou pro: " + state_data.logic[i].combination + " \ntedy, " + state_data.logic[i].state_label + " (č.: " + i + ")"
-                                    + "\n(s novou kontrolkou jiz: " + (data.status.length+1) +" stavu)");
+                                    var new_logic_set = prompt("Nastavte logiku s novou kontrolkou pro:\n" + state_data.logic[i].state_label + " (č.: " + i + ")"
+                                    + "\n(s novou kontrolkou jiz: " + (data.status.length+1) +" stavu)\nZadejte cislo v rozsahu stavu kontrolky, tedy: 0-" + (control_states-1));
                                     if(chosen_ok_input(new_logic_set) == true){
-                                        right_input = logic_verification(new_logic_set,false,true,i,0,2);
-                                        if(right_input == false){
+                                        //right_input = logic_verification(new_logic_set,false,true,i,0,2);
+                                        //aby sedel pocet stavu dane kontrolky
+                                        right_input = range_input_right(new_logic_set,0,control_states-1);
+                                        if(right_input == false){ 
                                             //vratime se o krok zpet...
                                             i -=1;
                                         } else{
                                             //prenastaveni logiky v pripade spravneho inputu:
-                                            new_logic_set = new_logic_set.replace(/\ /g, ',');
-                                            new_logic_set = new_logic_set.replace(/\./g, ',');
-                                            state_data.logic[i].combination = new_logic_set;
+                                            //new_logic_set = new_logic_set.replace(/\ /g, ',');
+                                            //new_logic_set = new_logic_set.replace(/\./g, ',');
+                                            state_data.logic[i].combination = state_data.logic[i].combination + "," + new_logic_set;
                                         }
                                     } else {
                                         end_add_control = confirm("Veskere nastaveni, co jste doted provedli bude zruseno, opravdu si prejete prerusit zadavani?");
@@ -107,7 +113,8 @@ function add_control(){
                             data.status[data.status.length] = {
                             "control": String(control_name),
                             "label": String(control_label),
-                            "state": Math.floor(Math.random() * control_states)
+                            "state": Math.floor(Math.random() * control_states),
+                            "max_states": control_states-1
                             }
 
                             console.log("Byla pridana nova kontrolka: " + control_name + " (" + control_label + ") s poctem stavu: " + control_states)
@@ -141,6 +148,7 @@ function delete_control(){
                             data.status[i-1].control = data.status[i].control;
                             data.status[i-1].label = data.status[i].label;
                             data.status[i-1].state = data.status[i].state;
+                            data.status[i-1].max_states = data.status[i].max_states;
                         }
                     }
                     //mazani logiky s danou kontrolkou:
@@ -206,23 +214,35 @@ function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_
     var right_input = false;
     var change_successful = false;
     var cancel_cycle = false;
-    
-    for (let i = 0; i < (String(state_data.logic[chosen_logic].combination).length + adding_new_control); i++) {
+    input = input.replace(/\ /g, '');
+    input = input.replace(/\./g, '');
+    input = input.replace(/\,/g, '');
+    state_data.logic[chosen_logic].combination = state_data.logic[chosen_logic].combination.toString().replace(/\ /g, '');
+    state_data.logic[chosen_logic].combination = state_data.logic[chosen_logic].combination.toString().replace(/\,/g, '');
+    state_data.logic[chosen_logic].combination = state_data.logic[chosen_logic].combination.toString().replace(/\./g, '');
+
+    for (let i = 0; i < (state_data.logic[chosen_logic].combination.length + adding_new_control); i++) {
         if(cancel_cycle == false){
+/*
             if (input[i] > 2){
                 console.log(input[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)");
                 alert(input[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)");
                 cancel_cycle = true;
+            */
+            //aby nebylo dovoleno zadat vetsi stav, nez dovoluje nastaveni kontrolky:
+            if (input[i] > data.status[i].max_states){
+                console.log(input[i] + " je mimo rozsah moznych stavu kontrolky: " + data.status[i].label + " ("+ data.status[i].control + ")\n(zadejde cislo v rozsahu: 0-"+ data.status[i].max_states + ")");
+                alert(input[i] + " je mimo rozsah moznych stavu kontrolky: " + data.status[i].label + " ("+ data.status[i].control + ")\n(zadejde cislo v rozsahu: 0-"+ data.status[i].max_states + ")");
+                cancel_cycle = true;
             } else {
                 correct_numbers +=1;
-            }
+            } 
         }
     }
     
-    input = input.replace(/\ /g, ',');
-    input = input.replace(/\./g, ',');
+    
     //adding new control uz vyzaduje logiku o 1 delsi...
-    if ((input.length == String(state_data.logic[chosen_logic].combination).length + adding_new_control) && (correct_numbers == String(state_data.logic[chosen_logic].combination).length + adding_new_control)){
+    if ((input.length == state_data.logic[chosen_logic].combination.length + adding_new_control) && (correct_numbers == state_data.logic[chosen_logic].combination.length + adding_new_control)){
         right_input = true;
     } else {
         console.log("spatne zadano, zkuste to prosim znovu");
@@ -309,8 +329,11 @@ function add_logic(){
         var right_input = false;
         var logic_combination = "";
         while(right_input == false && logic_combination != null){
-            
-            logic_combination = prompt("Zadejte funkce kontrolek ve formatu: \"0,0,0\"..." + " aktualne pro: " + data.status.length + " kontrolek");
+            var max_states_arr ="";
+            for (let i = 0; i < data.status.length; i++) {
+                max_states_arr =  max_states_arr + " " + data.status[i].label +" ("+ data.status[i].control + "): "  + data.status[i].max_states + " stavu\n";
+            }
+            logic_combination = prompt("Zadejte funkce kontrolek ve formatu: \"0,0,0\"..." + " aktualne pro: " + data.status.length + " kontrolek \n s maximalnim poctem stavu jednotlivych kontrolek:\n\n" + max_states_arr);
             if(chosen_ok_input(logic_combination) == true){
                 //kdyz pridavame novou, tak pro provnani zvolena prvni, jiz ulozena kombinace (chosen_logic = 0)... irelevantni
                 right_input = logic_verification(logic_combination,true,false,0,logic_name,0);
@@ -486,10 +509,16 @@ function main() {
     tData.className = "bold2";
     tData.textContent ="Kontrolka:"
     tRow.appendChild(tData);
-    //vypisovani kontrolek
-    var current_combination = [0,0,0,0]
+    //vytvareni pole proporovnavani se spravnou delkou
+    //data.status.length
+    var current_combination = [];
     for (let i = 0; i < data.status.length; i++) {
-        current_combination[i] = data.status[i].state;
+        current_combination += i;
+    }
+    var current_combination_arr = Array.from(current_combination)
+    //vypisovani kontrolek
+    for (let i = 0; i < data.status.length; i++) {
+        current_combination_arr[i] = data.status[i].state;
 
         var tData = document.createElement('td');
         tData.textContent = data.status[i].control + "\n (" + data.status[i].label + ")";
@@ -529,7 +558,7 @@ function main() {
     var sum_of_bad_combinations = 0;
     var result = "";
     for (let i = 0; i < state_data.logic.length; i++) {
-        if (current_combination.toString() == state_data.logic[i].combination.toString()){
+        if (current_combination_arr.toString() == state_data.logic[i].combination.toString()){
             result = state_data.logic[i].state_label;
             tData.textContent = state_data.logic[i].state_label ;  
         } else {
