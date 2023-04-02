@@ -46,6 +46,7 @@ th, td {
     padding: 20px 40px;
     text-align: center;
     
+    
     display: inline-block;
     font-size: 16px;
     font-weight: bold;
@@ -56,6 +57,7 @@ th, td {
     width: 0%;
     border:none;
 }
+
 .bold{
     color:black;
     background-color: white;
@@ -66,17 +68,52 @@ th, td {
     font-weight: bold;
     font-size: 20px;
 }
-.nesviti{
+.nesviti_btn{
     background-color: black;
+    text-align: center;
+    color: white;
+    width: 100%;
+    height: 100%;
+   
 }
-.sviti{
+.sviti_btn{
     background-color: rgb(42, 42, 252);
+    text-align: center;
+    color: white;
+    width: 100%;
+    height: 100%;
 }
 
+
+.blika_btn{
+    text-align: center;
+    color: white;
+    display: inline-block;
+    animation: blink 1s step-end infinite;
+    width: 100%;
+    height: 100%;   
+}
+
+
+
+.nesviti{
+    background-color: black;
+    text-align: center;
+    color: white;
+}
+
+.sviti{
+    background-color: rgb(42, 42, 252);
+    text-align: center;
+    color: white;
+}
 
 .blika{
     animation: blink 1s step-end infinite;
+    text-align: center;
+    color: white;
 }
+
 @keyframes blink{
      50% { 
         background-color: rgb(42, 42, 252);
