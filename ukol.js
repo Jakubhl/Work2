@@ -83,8 +83,6 @@ function add_control(){
                                             i -=1;
                                         } else{
                                             //prenastaveni logiky v pripade spravneho inputu:
-                                            //new_logic_set = new_logic_set.replace(/\ /g, ',');
-                                            //new_logic_set = new_logic_set.replace(/\./g, ',');
                                             state_data.logic[i].combination = state_data.logic[i].combination + "," + new_logic_set;
                                         }
                                     } else {
@@ -223,12 +221,7 @@ function logic_verification(input,add,change,chosen_logic,logic_name,adding_new_
 
     for (let i = 0; i < (state_data.logic[chosen_logic].combination.length + adding_new_control); i++) {
         if(cancel_cycle == false){
-/*
-            if (input[i] > 2){
-                console.log(input[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)");
-                alert(input[i] + " je mimo rozsah moznych stavu kontrolky (zadejde cislo v rozsahu: 0-2)");
-                cancel_cycle = true;
-            */
+
             //aby nebylo dovoleno zadat vetsi stav, nez dovoluje nastaveni kontrolky:
             if (input[i] > data.status[i].max_states){
                 console.log(input[i] + " je mimo rozsah moznych stavu kontrolky: " + data.status[i].label + " ("+ data.status[i].control + ")\n(zadejde cislo v rozsahu: 0-"+ data.status[i].max_states + ")");
@@ -506,7 +499,6 @@ function main() {
     tData.textContent ="Kontrolka:"
     tRow.appendChild(tData);
     //vytvareni pole proporovnavani se spravnou delkou
-    //data.status.length
     var current_combination = [];
     for (let i = 0; i < data.status.length; i++) {
         current_combination += i;
@@ -569,7 +561,6 @@ function main() {
     table.appendChild(tRow);
 
     document.getElementById("main_table").innerHTML = table.outerHTML;
-    
     return result;
 
 }
@@ -601,7 +592,10 @@ function custom_prompt(text){
 }
 
 
+
 //Vypis aktualni logicke tabulky
+var old_combination;
+
 function logic_table(){
     var table = document.createElement('table');
     table.setAttribute('border', '2');
@@ -627,116 +621,85 @@ function logic_table(){
     }
 
     table.appendChild(tRow);
-    var x = 0;
-    //var y = 0;
+    var id_for_cells = 0;
+
     for(let i = 0; i < state_data.logic.length; i++) {
         var tRow = document.createElement('tr');
         var tData = document.createElement('td');
         if(state_data.logic[i].state_label == result){
             //zvyrazneni vysledku
             tData.className = "result";
-            //y++;
-            tData.setAttribute('id',state_data.logic[i].state_label)
+            console.log(tData.className)
         }else{
             tData.className = "bold2";
-            //y++;
-            tData.setAttribute('id',state_data.logic[i].state_label)
         }
         tData.textContent = state_data.logic[i].state_label;
         tRow.appendChild(tData);
-
         
-
-        result_refresh = "";
         for (let j = 0; j < state_data.logic[i].combination.length; j++) {
             var tData = document.createElement('td');
-            //var tbutton = document.createElement('button');
             if(state_data.logic[i].combination[j] != ","){
                 if(state_data.logic[i].combination[j] == 0){
                     tData.className = "nesviti";
-                    //tbutton.className = "nesviti_btn"; 
                 } else if(state_data.logic[i].combination[j]==1){
                     tData.className = "sviti"; 
-                    //tbutton.className = "sviti_btn"; 
                 } else if(state_data.logic[i].combination[j]==2){
                     tData.className = "blika"; 
-                    //tbutton.className = "blika_btn";
                 }
                 //nastaveni id jednotlivych policek tabulky od nuly
-                x++;
+                id_for_cells++;
+                tData.setAttribute('id',id_for_cells)
                 
-                tData.setAttribute('id',x)
-                
-                
-                if(x == logic_to_change && logic_to_change != 0){
+                if(id_for_cells == logic_to_change && logic_to_change != 0){
                     if(tData.className == "nesviti" && logic_to_change != 0){
-                        const old_combination = state_data.logic[i].combination
+                        old_combination = state_data.logic[i].combination
                         state_data.logic[i].combination[j] = 1;
                         console.log("U logiky \"" + state_data.logic[i].state_label + "\" byla zmenena kombinace " + old_combination + " na: " + state_data.logic[i].combination)
                         tData.className = "sviti";
                         result = main();
-                        if(state_data.logic[i].state_label == result){
-                            result_refresh = document.getElementById(state_data.logic[i].state_label);
-                            result_refresh.className = "result"
-
-                        }
                         logic_to_change = 0;
                         
                     }else if(tData.className == "sviti" && logic_to_change != 0){
-                        const old_combination = state_data.logic[i].combination
+                        old_combination = state_data.logic[i].combination
                         state_data.logic[i].combination[j] = 2;
                         console.log("U logiky \"" + state_data.logic[i].state_label + "\" byla zmenena kombinace " + old_combination + " na: " + state_data.logic[i].combination)
                         tData.className = "blika";
                         result = main();
-                        if(state_data.logic[i].state_label == result){
-                            result_refresh = document.getElementById(state_data.logic[i].state_label);
-                            result_refresh.className = "result"
-                        }
                         logic_to_change = 0;
 
                     }else if(tData.className == "blika" && logic_to_change != 0){
-                        const old_combination = state_data.logic[i].combination
+                        old_combination = state_data.logic[i].combination
                         state_data.logic[i].combination[j] = 0;
                         console.log("U logiky \"" + state_data.logic[i].state_label + "\" byla zmenena kombinace " + old_combination + " na: " + state_data.logic[i].combination)
                         tData.className = "nesviti";
                         result = main();
-                        if(state_data.logic[i].state_label == result){
-                            result_refresh = document.getElementById(state_data.logic[i].state_label);
-                            result_refresh.className = "result"
-                        }
                         logic_to_change = 0;
                     }
                 }
-                
-                //tbutton.textContent = state_behaviour.label[state_data.logic[i].combination[j]].Task + " (" + state_data.logic[i].combination[j] + ")" ;
-                
                 tData.textContent = state_behaviour.label[state_data.logic[i].combination[j]].Task + " (" + state_data.logic[i].combination[j] + ")" ;
-                //tData.appendChild(tbutton);
                 tRow.appendChild(tData);
             }         
         }
     table.appendChild(tRow);
     }
-
     document.getElementById("logic_table").innerHTML = table.outerHTML;
+    
     btn_read();
 }
 logic_table();
 
 
 var logic_to_change = 0
-var x = 32;
+var id_for_cells = 32;
 btn_read();
 function btn_read(){
-    for(let i = 1;i<x+1;i++){
+    for(let i = 1;i<id_for_cells+1;i++){
         const btn = document.getElementById(i);
         if(btn){
             btn.addEventListener("click", function(){
-                //console.log("button " + i + " clicked")
-                //console.log("class: " + btn.className)
                 //Pro jakou pozici v kombinaci bude provadena zmena (jake tl. z tabulky bylo zmacknuto)
-                logic_to_change = i;
-        
+                logic_to_change = i;    
+                logic_table();
                 logic_table();
             });
         }
