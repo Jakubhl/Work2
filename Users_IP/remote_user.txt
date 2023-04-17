@@ -1,0 +1,29 @@
+Dim sComputerName, sQry, sUser, sDomain, sRes, sEcho
+Dim oWMIService
+Dim oProcess
+Dim vComputerList
+Dim iC
+
+vComputerList = Split("CZ-W-7465047;CZBRQ-W-512514", ";")
+
+sRes = ""
+sQry = "SELECT * FROM Win32_Process WHERE Name='explorer.exe'"
+
+For iC = LBound(vComputerList) To UBound(vComputerList)
+	sComputerName = vComputerList(iC)
+
+	Set oWMIService = GetObject("winmgmts:" & "{impersonationLevel=impersonate}!\\" & sComputerName & "\root\cimv2") 
+
+	For Each oProcess in oWMIService.ExecQuery(sQry)
+		oProcess.GetOwner sUser, sDomain
+		sRes = sRes & "  > " & sDomain & "\" & sUser & Chr(10)
+	Next
+
+	If Len(sRes) < 2 Then
+		sEcho = sEcho & sComputerName & " - This computer is unoccupied" & Chr(10)
+	Else
+		sEcho = sEcho & sComputerName & " - Logged-on users: " & Chr(10) & sRes	& Chr(10)
+	End If
+Next
+
+WScript.Echo sEcho
